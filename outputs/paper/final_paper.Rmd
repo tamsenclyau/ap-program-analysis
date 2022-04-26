@@ -1,0 +1,52 @@
+---
+title: "Underrepresentation of Students and Programs in the Advanced Placement (AP) Educational System"
+subtitle: "An Exploratory Analysis on the Demographic, Participation and Performance"
+author: Tamsen Yau
+thanks: "Code and data are available at: https://github.com/tamsenclyau/arts-representation-analysis"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+abstract: "During the pinnacle year of senior year high school, many students participate in the Advanced Placement (AP) system to accelerate their learning by completing pre-requisite courses early on for college credits and even to impact admission choices. But the system has also known an under-representation of students in certain ethnic and socioeconomic backgrounds as well as much stronger emphasis on STEM programs than Arts programs. In this study, I hope to explore the historical data from College Board, and explain the differences in student demographic, scores and participation among AP subjects, and also whether AP Exam performances affect college outcomes. In the latter end of the paper, the necessary steps to improve diversity in AP students and programs, and a regression analysis on AP to college performances are discussed."
+output:
+  bookdown::pdf_document2
+toc: FALSE
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+library(tidyverse)
+library(dplyr)
+library(data.table)
+```
+
+# Introduction
+College Board has seen large success in bringing in more students from public high schools to take AP exams. Due to the COVID-19 pandemic, I have decided to conduct my research on historical data no later than 2019 to account for any disruptions to the exam taking process. According to Inside Higher Education in 2019, 5000 more high schools now offer AP classes since a decade ago in 2009.  A steady annual increase of all test takers achieving a credit-qualifying score of 3 or above, with a 2% increase in the past year (749,938 in 2018 to 764,702 in 2019)
+
+Taking AP Exams comes at an additional cost as they are supplementary to public high school education which saw a barrier of entry for low-income students. Despite a $159 million subsidy from the College Board and additional funding of 30 US states in the past year of 2018, there are more systematic barriers through educators having the authority to recommend or not recommend students for advanced coursework which effectively locks out students out of access to AP classes, especially black and Latino students noted in recent criticism. Automatic enrollment is being rolled out in states such as Washington and North Carolina to remove bias. We will evaluate how effective the subsidy and new enrollment system in improving access to AP programs for under-represented students. 
+
+We can take 3 courses from the top 10 AP classes (Calculus AB, Biology and Statistics) and take 3 courses from the bottom 10 AP classes (Music Theory, Chinese Language & Culture and Studio Art 3-D Design); the average number of exam takers are 260,289 with a 13.6% of students scoring a 5 (the highest score achievable in the AP grading scheme) for the former, and an average number of 12,919 with a 30.4% of students scoring a 5. There is a drastic difference in number of students to show the prominence of STEM subjects over Arts subjects which can be explained of the overwhelming preference towards STEM degrees and careers. But the variability in scores between STEM and Arts is notable which can be explored further whether it is difference in sample numbers or dependent on curriculum.
+
+“The Relationship Between AP Exam Performance and College Outcomes” is an existing study from ERIC (Education Resources Information Center). College outcomes are measured by first-year GPA, followed by its retention into second year and scaled by how difficult the admissions are. After controlling the students’ high school GPA and SAT scores prior to college education, their results showed that students with an AP score of 3 or higher (out of 5) outperformed those with an AP score of 2 or below. Furthermore, students with an AP score 2 or below outperformed students with no AP scores. In this paper, we will conduct a similar study while replacing 2009 data with 2019 data to see if these implications still hold true. 
+
+# Data
+
+\newpage
+
+# Model
+
+\newpage
+
+# Results
+
+\newpage
+
+# Discussion
+
+\newpage
+
+\appendix
+
+\newpage
+
+# References
