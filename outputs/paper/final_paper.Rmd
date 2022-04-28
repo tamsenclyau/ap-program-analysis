@@ -1,10 +1,10 @@
 ---
 title: "Underrepresentation of Students and Programs in the Advanced Placement (AP) Educational System"
-subtitle: "An Exploratory Analysis on the Demographic, Participation and Performance"
+subtitle: "An Exploratory Analysis on AP Demographic, Participation and Performance"
 author: Tamsen Yau
-thanks: "Code and data are available at: https://github.com/tamsenclyau/arts-representation-analysis"
-date: "`r format(Sys.time(), '%d %B %Y')`"
-abstract: "During the pinnacle year of senior year high school, many students participate in the Advanced Placement (AP) system to accelerate their learning by completing pre-requisite courses early on for college credits and even to impact admission choices. But the system has also known an under-representation of students in certain ethnic and socioeconomic backgrounds as well as much stronger emphasis on STEM programs than Arts programs. In this study, I hope to explore the historical data from College Board, and explain the differences in student demographic, scores and participation among AP subjects, and also whether AP Exam performances affect college outcomes. In the latter end of the paper, the necessary steps to improve diversity in AP students and programs, and a regression analysis on AP to college performances are discussed."
+thanks: "Code and data are available at: https://github.com/tamsenclyau/ap-program-analysis"
+date: "April 27, 2022"
+abstract: "During the pinnacle year of senior year high school, many students participate in the Advanced Placement (AP) system to accelerate their learning in preparation for post-secondary education by completing pre-requisite courses early on for credits and even to impact admission choices. But the system has also known an under-representation of students in certain ethnic and socioeconomic backgrounds as well as much stronger emphasis on STEM programs than Arts programs. In this study, I hope to explore the historical data from College Board, and explain the differences in student demographic, scores and participation among AP subjects. In the latter end of the paper, we will determine whether AP Exam performances affect college outcomes and a regression analysis on AP to college performances are discussed."
 output:
   bookdown::pdf_document2
 toc: FALSE
@@ -18,30 +18,193 @@ knitr::opts_chunk$set(message = FALSE)
 library(tidyverse)
 library(dplyr)
 library(data.table)
+library(ggplot2)
+library(hrbrthemes)
+library(kableExtra)
+library(scales)
 ```
 
 # Introduction
-College Board has seen large success in bringing in more students from public high schools to take AP exams. Due to the COVID-19 pandemic, I have decided to conduct my research on historical data no later than 2019 to account for any disruptions to the exam taking process. According to Inside Higher Education in 2019, 5000 more high schools now offer AP classes since a decade ago in 2009.  A steady annual increase of all test takers achieving a credit-qualifying score of 3 or above, with a 2% increase in the past year (749,938 in 2018 to 764,702 in 2019)
+College Board has seen large success in bringing in more students from public high schools to take AP exams. According to Inside Higher Education in 2019, 5000 more high schools now offer AP classes since a decade ago in 2009.  A steady annual increase of all exam takers achieving a credit-qualifying score of 3 or above, with a 2% increase in the past year (749,938 in 2018 to 764,702 in 2019). [@Annual_Growth]
 
 Taking AP Exams comes at an additional cost as they are supplementary to public high school education which saw a barrier of entry for low-income students. Despite a $159 million subsidy from the College Board and additional funding of 30 US states in the past year of 2018, there are more systematic barriers through educators having the authority to recommend or not recommend students for advanced coursework which effectively locks out students out of access to AP classes, especially black and Latino students noted in recent criticism. Automatic enrollment is being rolled out in states such as Washington and North Carolina to remove bias. We will evaluate how effective the subsidy and new enrollment system in improving access to AP programs for under-represented students. 
+	
+From 2009, we can take 3 courses from the top 10 AP classes (Calculus AB, Biology and Statistics) and take 3 courses from the bottom 10 AP classes (Music Theory, Chinese Language & Culture and Studio Art 3-D Design); the average number of exam takers are 260,289 with a 13.6% of students scoring a 5 (the highest score achievable in the AP grading scheme) for the former, and an average number of 12,919 with a 30.4% of students scoring a 5. There is a drastic difference in number of students to show the prominence of STEM (Science, Technology, Engineering and Math) subjects over Arts (visual, music, and language inclusive) subjects which can be explained of the overwhelming preference towards STEM degrees and careers. But the variability in scores between STEM and Arts is notable which can be explored further whether it is difference in sample numbers or dependent on curriculum. Note the following table for a full break-down of the AP scoring criterion:
+```{r, echo=F, warning=F, message=F, fig.cap="AP Scoring Criterion"}
+scores <- c("5", "4", "3", "2", "1")
+representation <- c("extremely well-qualified", "well-qualified", "qualified", "possibly-qualified", "no recommendation")
+criterion <- data.frame(scores, representation)
+kable(criterion, "pipe", caption = "AP Scoring Criterion", col.names=c("Scores", "Representation"), align=c("c","c"))
+```
 
-We can take 3 courses from the top 10 AP classes (Calculus AB, Biology and Statistics) and take 3 courses from the bottom 10 AP classes (Music Theory, Chinese Language & Culture and Studio Art 3-D Design); the average number of exam takers are 260,289 with a 13.6% of students scoring a 5 (the highest score achievable in the AP grading scheme) for the former, and an average number of 12,919 with a 30.4% of students scoring a 5. There is a drastic difference in number of students to show the prominence of STEM subjects over Arts subjects which can be explained of the overwhelming preference towards STEM degrees and careers. But the variability in scores between STEM and Arts is notable which can be explored further whether it is difference in sample numbers or dependent on curriculum.
-
-“The Relationship Between AP Exam Performance and College Outcomes” is an existing study from ERIC (Education Resources Information Center). College outcomes are measured by first-year GPA, followed by its retention into second year and scaled by how difficult the admissions are. After controlling the students’ high school GPA and SAT scores prior to college education, their results showed that students with an AP score of 3 or higher (out of 5) outperformed those with an AP score of 2 or below. Furthermore, students with an AP score 2 or below outperformed students with no AP scores. In this paper, we will conduct a similar study while replacing 2009 data with 2019 data to see if these implications still hold true. 
+	
+“The Relationship Between AP Exam Performance and College Outcomes” is an existing study from ERIC (Education Resources Information Center). [@2009_Report] College outcomes are measured by first-year GPA, followed by its retention into second year and scaled by how difficult the admissions are. After controlling the students’ high school GPA and SAT scores prior to college education, their results showed that students with an AP score of 3 or higher (out of 5) outperformed those with an AP score of 2 or below. Furthermore, students with an AP score 2 or below outperformed students with no AP scores. In this paper, we will conduct a similar study with 2019 data and draw comparisons to the 2009 data to see if these implications still hold true. 
 
 # Data
 
+Due to the COVID-19 pandemic, I have decided to conduct my research on historical data no later than 2019 to account for any disruptions to the exam taking process. The 2009-to-2019-time frame will be referred to as the past decade for our analysis while also having more complete and consistent data to draw comparisons to the forementioned 2009 College Board research report of interest. 
+
+## Annual Growth of the AP Program in the Past Decade (2009-2019)
+To verify the claim by Inside Higher Education that the AP Program indeed saw a steady annual increase of exam takers, `GrandTotal.csv` is a cleaned dataset cleaned that aggregates the College Board’s exam volume by US states in the. The original dataset did not differentiate between exams that scored 3 or above and exams that scored 2 or below but including all exams taken regardless of scores would still be a good indicator of the AP Program’s annual growth as shown in Figure \@ref(fig:examstaken) below.
+
+```{r examstaken, fig.cap="2009 vs 2019 AP Exams Taken in Selected Popular Subjects", fig.height = 8, fig.width = 6, echo=F, warning=F}
+grand_total <- data.table(read_csv("../inputs/data/GrandTotal.csv"))
+grand_total %>%
+  tail(10) %>%
+  ggplot(aes(x=year, y=exams_taken)) +
+    geom_line(color="grey") +
+    geom_point(shape=20, color="black", fill="green", size=6) +
+    ggtitle("Annual Growth of AP Exams Taken") 
+```
+
 \newpage
 
-# Model
+## Ethnic Pies of AP Student Population
+Unfortunately, when it comes to 2019 ethnic data, most of it is no longer open-sourced and what I could draw out is in `Ethnicities.csv`, which only contains ethnic data from the most populated US state per each of the six US regions:
 
-\newpage
+  * West: California
+  * New England: Massachusetts
+  * South: Texas
+  * Midwest: Illinois
+  * Southwest: Florida
+  * Mid-Atlantic: New York
+
+Although our sample spaces may differ here, our main interest is in the demographic percentages. From here, we have the necessary data to create pie graphs for each major US region in Figures \@ref(fig:cali-pie)-\@ref(fig:florida-pie). 
+
+```{r, echo=F, message=F, warning=F}
+ethnicData <- read_csv("inputs/data/EthnicitiesData.csv")
+cali <- ethnicData %>% filter(State == "California")
+masscheut <- ethnicData %>% filter(State == "Massachusetts")
+texas <- ethnicData %>% filter(State == "Texas")
+illinois <- ethnicData %>% filter(State == "Illinois")
+florida <- ethnicData %>% filter(State == "Florida")
+ny <- ethnicData %>% filter(State == "New York")
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+```{r cali-pie, fig.cap="AP Student Demographic in California", echo=F, warning=F, out.height="250px"}
+ggplot(cali, aes(x = "Percentages", y = Students, fill = Ethnicity)) +
+  geom_col() +
+  xlab("Percentage Points") +
+  geom_text(aes(label = round(Students/sum(Students)*100, digits=2)),
+            position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y") +
+    theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid  = element_blank())
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+```{r masscheut-pie, fig.cap="AP Student Demographic in Massachusetts", echo=F, warning=F, out.height="250px"}
+ggplot(masscheut, aes(x = "Percentages", y = Students, fill = Ethnicity)) +
+  geom_col() +
+  xlab("Percentage Points") +
+  geom_text(aes(label = round(Students/sum(Students)*100, digits=2)),
+            position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y") +
+    theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid  = element_blank())
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+```{r texas-pie, fig.cap="AP Student Demographic in Texas", echo=F, warning=F, out.height="250px"}
+ggplot(texas, aes(x = "Percentages", y = Students, fill = Ethnicity)) +
+  geom_col() +
+  xlab("Percentage Points") +
+  geom_text(aes(label = round(Students/sum(Students)*100, digits=2)),
+            position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y") +
+    theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid  = element_blank())
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+```{r illinois-pie, fig.cap="AP Student Demographic in Illinois", echo=F, warning=F, out.height="250px"}
+ggplot(illinois, aes(x = "Percentages", y = Students, fill = Ethnicity)) +
+  geom_col() +
+  xlab("Percentage Points") +
+  geom_text(aes(label = round(Students/sum(Students)*100, digits=2)),
+            position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y") +
+    theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid  = element_blank())
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+```{r ny-pie, fig.cap="AP Student Demographic in New York", echo=F, warning=F, out.height="250px"}
+ggplot(ny, aes(x = "Percentages", y = Students, fill = Ethnicity)) +
+  geom_col() +
+  xlab("Percentage Points") +
+  geom_text(aes(label = round(Students/sum(Students)*100, digits=2)),
+            position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y") +
+    theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid  = element_blank())
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+```{r florida-pie, fig.cap="AP Student Demographic in Florida", echo=F, warning=F, out.height="250px"}
+ggplot(florida, aes(x = "Percentages", y = Students, fill = Ethnicity)) +
+  geom_col() +
+  xlab("Percentage Points") +
+  geom_text(aes(label = round(Students/sum(Students)*100, digits=2)),
+            position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y") +
+    theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid  = element_blank())
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+## STEM vs Arts: Duel of the Subjects in Exam Numbers and Averages
+When comparing STEM and Arts subjects, recall in the Introduction we have selected 3 from each category for our observation:
+
+* STEM Subjects of interest: Calculus AB, Biology, Statistics
+* Arts Subjects of interest: Music Theory, Chinese Language & Culture, Studio Art 3-D Design
+
+From `SubjectScoresData.csv`, I have wrangled the number of exams and average scores into two new datasets `ArtsSTEMSubjectExams.csv` and `ArtsSTEMSubjectAverages.csv` where we can generate the bar graphs needed to draw comparisons between all six subjects of interest through Figures \@ref(fig:iexams-bar)-\@ref(fig:iaverages-bar).
+
+```{r, echo=F, warning=F}
+iexams <- read_csv("inputs/data/ArtsSTEMSubjectExams.csv")
+iaverages <- read_csv("inputs/data/ArtsSTEMSubjectAverages.csv")
+```
+
+```{r iexams-bar, fig.cap="AP Exams Taken in Select Subjects 2019", echo=F, warning=F, out.height="250px"}
+ggplot(iexams, aes(x=Subject, y=Exams, fill=State)) +
+         geom_bar(stat="identity") +
+   scale_y_continuous(name="Exams Taken", labels = comma)
+```
+
+```{r iaverages-bar, fig.cap="AP Averages in Select Subjects 2019", echo=F, warning=F, out.height="250px"}
+ggplot(iaverages, aes(x=Subject, y=Averages, fill=State)) +
+         geom_bar(stat="identity")
+```
 
 # Results
+We can see a consistent annual increase in exams taken to measure the AP Program’s growth through the years 2009 to 2017 in Figure \@ref(fig:examstaken) with an average increase of 7.5% each year and a peak increase of 10% between 2009 and 2010 while a smaller increase of 3% through 2017-2018 and a plateau of 0% through 2018-2019. 
 
-\newpage
+In Figure \@ref(fig:cali-pie) and \@ref(fig:texas-pie), an interesting observation to point out is how Hispanic AP students make up the largest student demographic in the state of California and Texas at 39.58% and 43.85% respectively. Asian students saw one instance of being above 20% representation in California at 27.63%. In all other instances, White students make up the largest student demographic with about half of all AP students with the largest representation in Massachusetts at 64.25% in Figure \@ref(fig:masscheut-pie). American Indian/Alaska Native and Native Hawaiian students are the most underrepresented student group with less than 1% and usually at the 0.1% to 0.2% range while Native Hawaiian students aren't faring better at around the 0.3% range.
+
+In Figure \@ref(fig:iexams-bar), The Art subjects (3-D Design, Chinese, Music Theory) see an absurdly low numbers of exams taken in 2019 compared to its STEM subject counterparts (Biology, Calculus, Statistics) with Calculus AB surpassing 600,000 exams taken in the six major US states. It is also noteworthy that a far larger margin of AP Exams is taken in Texas. Followed by Figure \@ref(fig:iaverages-bar), we also see lower averages across the board for Art subjects compared to STEM subjects with Biology at an AP score average of 2.58.
 
 # Discussion
+## The AP Program Continues to Grow
+The College Board is a not-for-profit (recreational) organization that does not operate with the business intention of earning revenue and runs the Advanced Placement (AP) program that collaborates with high schools and college faculties to give opportunities for high school students to earn college credits, granted that the student receives a score of 3 or higher of a 5-point grading criterion. Not only will the college credits accelerate the students’ progress to college graduation but also better prepare them for college education. According to Linda Jacobson from K-12 Dive [@tandem_growth], More than 1.2 million US high school students took an AP course in 2019 which is a total increase of 59% in the past decade with an increase of 60% of at least one AP exam scoring a 3 or higher to earn a college credit. The number of high schools offering AP courses also grown from 17,374 schools in 2009 to 22,678 schools in 2019, which is a 24.9% increase. CEO of College Board, David Coleman, stated that the AP Program is “of immense political and historical significance” that is “expanding at scale without sacrificing rigor.” It is very curious how many statistical reports from various sources reflect similar plateau numbers of 2018-2019 but no article discusses the reasoning behind this growth stint. Meanwhile, many articles did show up around the same time to discuss about the underrepresented students in rural areas [@rural_crisis] and in minority ethnic backgrounds. Perhaps this is synonymous to the plateau numbers in the 2018-2019 year and in the following section, we will further discuss about the AP student demographic.
+
+## White and Hispanic Students Pre-dominant in AP Student Demographic
+The AP Program has always been in question for its racial diversity as it seeks to provide an equity environment for high school students to be challenged by college-level education. According to Mark Carl Rom from Inside Higher Ed [@AP_Diversity], the number of Hispanic/Latina students scoring 3 or higher grew by 180% in the past decade and are overrepresented relative to white students among high-performing students. This can be seen as the large growth of Hispanic/Latina in proportionate of exams taken as seen in our 2019 pie charts on exams taken compared to the much lower proportions seen in College Board’s 2009 research report where Hispanic/Latina students make up less than 10% of the AP student demographic across AP Calculus, AP Biology, AP English Language, and AP US History. This can also be reflective on the prominent growth in Hispanic/Latina residents in the US especially in California and Texas as reported by Jens Manuel Krogstad from Pew Research Center [@Hispanic_Pop]. American Indian/Alaska Native students passing an AP exam declined in the past decade as the 0.3% to 0.6% representation of American Indian/Alaska Native students in the 2009 research report decreased to 0.1% to 0.2% relative to our 2019 pie charts across all major US regions. Meanwhile the number of Black students earning a passing score on an AP exam grew by 90% from 2009 to 2019, which is a greater rate of growth than high schools. However, our 2019 data and 2009 research report indicate little growth in exams taken by Black students, staying at around an 8.5%. 
+
+A clear weakness in the 2019 data is the lack of information from other US states due to the lack of open-sourced datasets regarding ethnicities from College Board. Without data from other US states, we fail to capture a potentially more ethnically diverse demographic and susceptible to outliers and bias with a sample space of only six US states out of the fifty US states that exist. The 2019 data also lacked differentiation between AP exams taken that scored 3 or higher and AP exams taken that scored 2 or below, which can explain some discrepancies between the qualities and quantities of exam results.
+
+## STEM Over Arts
+From personal experience taking AP exams, given that 30 students can fit in a classroom for an AP exam, Music Theory had about 15 students and Calculus AB had close to 30. Upon chatting with my fellow peers and even professors who went through the AP program in the past, they can also testify that STEM subjects consistently had near-full exam rooms while Arts subjects usually hold the bare minimum occupancy. A professor once attended the Studio Arts 2-D Design exam, being only one of three students present in the exam room. We can justify our experiences that the number of exams taken in STEM subjects are many times greater than Arts subjects and with the subjective grading scheme of Arts subjects and also a far lower of participating students, we can see lower and less consistent averages.
+
+There is not much coverage in regards of the imbalance popularity between STEM and Arts courses in the AP program. It may likely be related to the preference of STEM degrees in college over Arts degrees due to the common notion that STEM degrees generate more career opportunities, which is not included in this paper but can see a significant addition to reason this common notion. 
+
 
 \newpage
 
